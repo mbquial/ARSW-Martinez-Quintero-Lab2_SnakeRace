@@ -5,7 +5,6 @@ import co.eci.snake.core.Direction;
 import co.eci.snake.core.Snake;
 
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public final class SnakeRunner implements Runnable {
   private final Snake snake;
@@ -14,6 +13,7 @@ public final class SnakeRunner implements Runnable {
   private final int turboSleepMs = 40;
   private int turboTicks = 0;
   private volatile boolean isPaused = false;
+  private final Object pauseLock = new Object();
 
   public SnakeRunner(Snake snake, Board board) {
     this.snake = snake;
@@ -24,8 +24,10 @@ public final class SnakeRunner implements Runnable {
   public void run() {
     try {
       while (!Thread.currentThread().isInterrupted()) {
-          while (isPaused){
-              Thread.sleep(50);
+          synchronized (pauseLock) {
+              while (isPaused) {
+                  pauseLock.wait();
+              }
           }
         maybeTurn();
         var res = board.step(snake);
@@ -42,6 +44,18 @@ public final class SnakeRunner implements Runnable {
       Thread.currentThread().interrupt();
     }
   }
+
+    public void pause() {
+        synchronized (pauseLock) {
+            isPaused = true;
+        }
+    }
+    public void resume() {
+        synchronized (pauseLock) {
+            isPaused = false;
+            pauseLock.notifyAll();
+        }
+    }
 
   private void maybeTurn() {
     double p = (turboTicks > 0) ? 0.05 : 0.10;
