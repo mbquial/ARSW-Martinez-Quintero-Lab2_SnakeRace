@@ -1,8 +1,10 @@
 package co.eci.snake.ui.legacy;
 
+import co.eci.snake.concurrency.GameCoordinator;
 import co.eci.snake.concurrency.SnakeRunner;
 import co.eci.snake.core.Board;
 import co.eci.snake.core.Direction;
+import co.eci.snake.core.GameStats;
 import co.eci.snake.core.Position;
 import co.eci.snake.core.Snake;
 import co.eci.snake.core.engine.GameClock;
@@ -19,8 +21,11 @@ public final class SnakeApp extends JFrame {
   private final Board board;
   private final GamePanel gamePanel;
   private final JButton actionButton;
+  private final JLabel statsLabel;
   private final GameClock clock;
   private final java.util.List<Snake> snakes = new java.util.ArrayList<>();
+  private final java.util.List<SnakeRunner> runners = new java.util.ArrayList<>();
+  private GameCoordinator coordinator;
 
   public SnakeApp() {
     super("The Snake Race");
@@ -35,11 +40,22 @@ public final class SnakeApp extends JFrame {
     }
 
     this.gamePanel = new GamePanel(board, () -> snakes);
-    this.actionButton = new JButton("Action");
+    this.actionButton = new JButton("Iniciar");
+    this.statsLabel = new JLabel(" ");
+    statsLabel.setFont(new Font("Arial", Font.BOLD, 14));
+    statsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+    statsLabel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+    statsLabel.setBackground(new Color(240, 240, 240));
+    statsLabel.setOpaque(true);
+    statsLabel.setPreferredSize(new Dimension(700, 30));
+
+    JPanel bottomPanel = new JPanel(new BorderLayout());
+    bottomPanel.add(statsLabel, BorderLayout.NORTH);
+    bottomPanel.add(actionButton, BorderLayout.SOUTH);
 
     setLayout(new BorderLayout());
     add(gamePanel, BorderLayout.CENTER);
-    add(actionButton, BorderLayout.SOUTH);
+    add(bottomPanel, BorderLayout.SOUTH);
 
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     pack();
@@ -47,8 +63,15 @@ public final class SnakeApp extends JFrame {
 
     this.clock = new GameClock(60, () -> SwingUtilities.invokeLater(gamePanel::repaint));
 
+    snakes.forEach(board::registerSnake);
+
     var exec = Executors.newVirtualThreadPerTaskExecutor();
-    snakes.forEach(s -> exec.submit(new SnakeRunner(s, board)));
+    for (Snake s : snakes) {
+      SnakeRunner runner = new SnakeRunner(s, board);
+      runners.add(runner);
+      exec.submit(runner);
+    }
+    this.coordinator = new GameCoordinator(runners);
 
     actionButton.addActionListener((ActionEvent e) -> togglePause());
 
@@ -125,17 +148,61 @@ public final class SnakeApp extends JFrame {
     }
 
     setVisible(true);
-    clock.start();
   }
 
   private void togglePause() {
-    if ("Action".equals(actionButton.getText())) {
-      actionButton.setText("Resume");
+    String currentText = actionButton.getText();
+    
+    if ("Iniciar".equals(currentText)) {
+      actionButton.setText("Pausar");
+      clock.start();
+      coordinator.resumeAll();
+      
+    } else if ("Pausar".equals(currentText)) {
+      actionButton.setText("Reanudar");
       clock.pause();
+      
+      new Thread(() -> {
+        try {
+          coordinator.pauseAll();
+          SwingUtilities.invokeLater(() -> {
+            Snake longest = GameStats.getLongestAliveSnake(snakes);
+            Snake worst = GameStats.getFirstDeadSnake(snakes);
+            updateStatsDisplay(longest, worst);
+            gamePanel.repaint();
+          });
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+      }).start();
+      
     } else {
-      actionButton.setText("Action");
+      actionButton.setText("Pausar");
+      clearStatsDisplay();
+      coordinator.resumeAll();
       clock.resume();
     }
+  }
+
+  private void updateStatsDisplay(Snake longest, Snake worst) {
+    String mensaje = "";
+    
+    if (longest != null) {
+      mensaje = "Serpiente mas larga: #" + longest.getId() + 
+                " (longitud: " + longest.getLength() + ")";
+    } else {
+      mensaje = "No hay serpientes vivas";
+    }
+    
+    if (worst != null) {
+      mensaje = mensaje + "  |  Primera en morir: #" + worst.getId();
+    }
+    
+    statsLabel.setText(mensaje);
+  }
+
+  private void clearStatsDisplay() {
+    statsLabel.setText(" ");
   }
 
   public static final class GamePanel extends JPanel {

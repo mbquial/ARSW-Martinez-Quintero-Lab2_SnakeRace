@@ -16,8 +16,9 @@ public final class Board {
   private final Set<Position> turbo = new HashSet<>();
   private final Map<Position, Position> teleports = new HashMap<>();
   private final Object lockStep = new Object();
+  private final Set<Snake> allSnakes = new HashSet<>();
 
-    public enum MoveResult { MOVED, ATE_MOUSE, HIT_OBSTACLE, ATE_TURBO, TELEPORTED }
+    public enum MoveResult { MOVED, ATE_MOUSE, HIT_OBSTACLE, ATE_TURBO, TELEPORTED, DEAD }
 
   public Board(int width, int height) {
     if (width <= 0 || height <= 0) throw new IllegalArgumentException("Board dimensions must be positive");
@@ -37,8 +38,19 @@ public final class Board {
   public Set<Position> turbo() { return new HashSet<>(turbo); }
   public Map<Position, Position> teleports() { return new HashMap<>(teleports); }
 
+  public void registerSnake(Snake snake) {
+    synchronized (lockStep) {
+      allSnakes.add(snake);
+    }
+  }
+
   public  MoveResult step(Snake snake) {
       Objects.requireNonNull(snake, "snake");
+
+      if (!snake.isAlive()) {
+          return MoveResult.DEAD;
+      }
+      
       var head = snake.head();
       var dir = snake.direction();
       Position next = new Position(head.x() + dir.dx, head.y() + dir.dy).wrap(width, height);
@@ -49,6 +61,22 @@ public final class Board {
 
       synchronized (lockStep) {
           if (obstacles.contains(next)) return MoveResult.HIT_OBSTACLE;
+
+          for (Snake other : allSnakes) {
+              if (other != snake && other.isAlive()) {
+                  var otherBody = other.snapshot();
+                  if (otherBody.contains(next)) {
+                      snake.markDead();
+                      return MoveResult.DEAD;
+                  }
+              }
+          }
+
+          var myBody = snake.snapshot();
+          if (myBody.size() > 1 && myBody.contains(next)) {
+              snake.markDead();
+              return MoveResult.DEAD;
+          }
 
           if (teleports.containsKey(next)) {
               next = teleports.get(next);
