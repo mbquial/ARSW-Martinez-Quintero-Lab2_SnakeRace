@@ -33,11 +33,11 @@
   <tr>
     <td align="center">
       <strong>María Belén Quintero</strong><br>
-      👩‍💻 Desarrolladora
+      👩‍💻
     </td>
     <td align="center">
       <strong>Nikolas Martínez Rivera</strong><br>
-      👨‍💻 Desarrollador
+      👨‍💻
     </td>
   </tr>
 </table>
