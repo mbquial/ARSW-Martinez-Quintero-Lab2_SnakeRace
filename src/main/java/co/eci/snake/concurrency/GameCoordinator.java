@@ -11,6 +11,7 @@ public final class GameCoordinator {
 
     public GameCoordinator(List<SnakeRunner> runners) {
         this.runners = runners;
+        this.pauseRequested.set(true);
     }
 
     public void pauseAll() throws InterruptedException {

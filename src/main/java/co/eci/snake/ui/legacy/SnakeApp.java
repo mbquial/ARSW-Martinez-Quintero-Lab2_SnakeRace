@@ -199,7 +199,7 @@ public final class SnakeApp extends JFrame {
         }
       }).start();
       
-    } else {
+    } else if ("Reanudar".equals(currentText)) {
       actionButton.setText("Pausar");
       clearStatsDisplay();
       coordinator.resumeAll();
