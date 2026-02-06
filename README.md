@@ -20,9 +20,81 @@
 ## 📂 Estructura del Repositorio
 ```
 📦 Snake Race Lab
-├── 📁 src/              # Código fuente del laboratorio
-├── 📁 docs/             # Documentación y respuestas del laboratorio
-└── 📁 primeFinder/      # Parte 1 - Ejercicio de calentamiento
+├── 📁 snake-game/                    # Módulo del juego Snake Race
+│   ├── 📁 src/main/java/
+│   │   └── 📁 co/eci/snake/
+│   │       ├── 📁 app/              # Punto de entrada (Main)
+│   │       ├── 📁 concurrency/      # Lógica de hilos y concurrencia
+│   │       ├── 📁 core/             # Motor del juego y entidades
+│   │       └── 📁 ui/               # Interfaz gráfica
+│   └── 📄 pom.xml                   # Configuración Maven del juego
+│
+├── 📁 primeFinder/                   # Módulo del buscador de números primos
+│   ├── 📁 src/main/java/
+│   │   └── 📁 edu/eci/arsw/primefinder/
+│   │       ├── 📄 Main.java         # Punto de entrada
+│   │       ├── 📄 Control.java      # Controlador de hilos
+│   │       └── 📄 PrimeFinderThread.java  # Thread para búsqueda
+│   └── 📄 pom.xml                   # Configuración Maven de Prime Finder
+│
+├── 📁 docs/                          # Documentación del laboratorio
+├── 📄 pom.xml                        # POM padre (multi-módulo)
+└── 📄 README.md                      # Este archivo
+```
+
+---
+
+## 💻 Compilar Todo el Proyecto
+
+```bash
+mvn clean compile
+```
+
+---
+
+## 🎮 Ejecutar Snake Race
+
+### Ejecución básica (2 serpientes por defecto)
+
+Desde la carpeta `snake-game`:
+```bash
+cd snake-game
+mvn exec:java
+```
+
+Desde la raíz del proyecto:
+```bash
+mvn exec:java -pl snake-game
+```
+
+### Ejecución con número personalizado de serpientes
+
+Para especificar el número de serpientes (por ejemplo, 4 serpientes):
+
+Desde la carpeta `snake-game`:
+```bash
+cd snake-game
+mvn -q -DskipTests exec:java -Dsnakes=4
+```
+
+Desde la raíz del proyecto:
+```bash
+mvn -q -DskipTests exec:java -pl snake-game -Dsnakes=4
+```
+
+---
+
+## 🔢 Ejecutar Prime Finder
+
+Desde la carpeta `primeFinder`:
+```bash
+cd primeFinder
+mvn exec:java
+```
+
+Desde la raíz del proyecto:
+```bash
+mvn exec:java -pl primeFinder
 ```
 
 ---

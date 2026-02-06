@@ -1,18 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>co.eci.snake</groupId>
-  <artifactId>snake-race-java21</artifactId>
-  <version>1.2.0</version>
-  <packaging>pom</packaging>
-  <name>Snake Race (Java 21) - Modernized Starter</name>
-  <description>Snake Race lab: Java 21, virtual threads, legacy-like UI, teleports and turbo items.</description>
-
-  <modules>
-    <module>snake-game</module>
-    <module>primeFinder</module>
-  </modules>
+  
+  <parent>
+    <groupId>co.eci.snake</groupId>
+    <artifactId>snake-race-java21</artifactId>
+    <version>1.2.0</version>
+  </parent>
+  
+  <artifactId>snake-game</artifactId>
+  <name>Snake Race Game</name>
+  <description>Snake Race game module</description>
 
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
