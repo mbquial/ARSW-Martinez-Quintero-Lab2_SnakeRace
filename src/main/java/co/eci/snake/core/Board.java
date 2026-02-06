@@ -73,7 +73,8 @@ public final class Board {
           }
 
           var myBody = snake.snapshot();
-          if (myBody.size() > 1 && myBody.contains(next)) {
+          myBody.pollFirst();
+          if (myBody.contains(next)) {
               snake.markDead();
               return MoveResult.DEAD;
           }

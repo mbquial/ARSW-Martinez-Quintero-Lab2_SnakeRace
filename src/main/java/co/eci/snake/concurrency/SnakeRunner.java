@@ -22,6 +22,12 @@ public final class SnakeRunner implements Runnable {
     this.board = board;
   }
 
+  public SnakeRunner(Snake snake, Board board, boolean startPaused) {
+    this.snake = snake;
+    this.board = board;
+    this.isPaused = startPaused;
+  }
+
   @Override
   public void run() {
     try {
