@@ -55,43 +55,51 @@ public final class Board {
       var dir = snake.direction();
       Position next = new Position(head.x() + dir.dx, head.y() + dir.dy).wrap(width, height);
 
-      boolean ateMouse;
-      boolean ateTurbo;
+      boolean ateMouse = false;
+      boolean ateTurbo = false;
       boolean teleported = false;
 
+      boolean hitObstacle = false;
+      
       synchronized (lockStep) {
-          if (obstacles.contains(next)) return MoveResult.HIT_OBSTACLE;
-
-          for (Snake other : allSnakes) {
-              if (other != snake && other.isAlive()) {
-                  var otherBody = other.snapshot();
-                  if (otherBody.contains(next)) {
-                      snake.markDead();
-                      return MoveResult.DEAD;
+          if (obstacles.contains(next)) {
+              hitObstacle = true;
+          } else {
+              for (Snake other : allSnakes) {
+                  if (other != snake && other.isAlive()) {
+                      var otherBody = other.snapshot();
+                      if (otherBody.contains(next)) {
+                          snake.markDead();
+                          return MoveResult.DEAD;
+                      }
                   }
               }
-          }
 
-          var myBody = snake.snapshot();
-          myBody.pollFirst();
-          if (myBody.contains(next)) {
-              snake.markDead();
-              return MoveResult.DEAD;
-          }
+              var myBody = snake.snapshot();
+              myBody.pollFirst();
+              if (myBody.contains(next)) {
+                  snake.markDead();
+                  return MoveResult.DEAD;
+              }
 
-          if (teleports.containsKey(next)) {
-              next = teleports.get(next);
-              teleported = true;
-          }
+              if (teleports.containsKey(next)) {
+                  next = teleports.get(next);
+                  teleported = true;
+              }
 
-          ateMouse = mice.remove(next);
-          ateTurbo = turbo.remove(next);
+              ateMouse = mice.remove(next);
+              ateTurbo = turbo.remove(next);
 
-          if (ateMouse) {
-              mice.add(randomEmpty());
-              obstacles.add(randomEmpty());
-              if (ThreadLocalRandom.current().nextDouble() < 0.2) turbo.add(randomEmpty());
+              if (ateMouse) {
+                  mice.add(randomEmpty());
+                  obstacles.add(randomEmpty());
+                  if (ThreadLocalRandom.current().nextDouble() < 0.2) turbo.add(randomEmpty());
+              }
           }
+      }
+
+      if (hitObstacle) {
+          return MoveResult.HIT_OBSTACLE;
       }
 
       snake.advance(next, ateMouse);
