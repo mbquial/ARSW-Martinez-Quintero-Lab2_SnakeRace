@@ -4,11 +4,17 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public final class Snake {
+  private static int nextId = 1;
+  private final int id;
   private final Deque<Position> body = new ArrayDeque<>();
   private volatile Direction direction;
   private int maxLength = 5;
+  private long deathTimestamp = -1;
 
   private Snake(Position start, Direction dir) {
+    synchronized (Snake.class) {
+      this.id = nextId++;
+    }
     body.addFirst(start);
     this.direction = dir;
   }
@@ -17,9 +23,9 @@ public final class Snake {
     return new Snake(new Position(x, y), dir);
   }
 
-  public Direction direction() { return direction; }
+  public synchronized Direction direction() { return direction; }
 
-  public void turn(Direction dir) {
+  public synchronized void turn(Direction dir) {
     if ((direction == Direction.UP && dir == Direction.DOWN) ||
         (direction == Direction.DOWN && dir == Direction.UP) ||
         (direction == Direction.LEFT && dir == Direction.RIGHT) ||
@@ -31,11 +37,31 @@ public final class Snake {
 
   public Position head() { return body.peekFirst(); }
 
-  public Deque<Position> snapshot() { return new ArrayDeque<>(body); }
+  public synchronized Deque<Position> snapshot() { return new ArrayDeque<>(body); }
 
-  public void advance(Position newHead, boolean grow) {
+  public synchronized void advance(Position newHead, boolean grow) {
     body.addFirst(newHead);
     if (grow) maxLength++;
     while (body.size() > maxLength) body.removeLast();
+  }
+
+  public int getId() { return id; }
+
+  public synchronized boolean isAlive() {
+    return deathTimestamp == -1;
+  }
+
+  public synchronized void markDead() {
+    if (deathTimestamp == -1) {
+      deathTimestamp = System.currentTimeMillis();
+    }
+  }
+
+  public synchronized int getLength() {
+    return body.size();
+  }
+
+  public synchronized long getDeathTime() {
+    return deathTimestamp;
   }
 }
